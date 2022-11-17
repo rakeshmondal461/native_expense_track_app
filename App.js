@@ -8,6 +8,9 @@ import { Ionicons } from "@expo/vector-icons";
 import ManageExpensesActivity from "./activities/ManageExpensesActivity";
 import AllExpensesActivity from "./activities/AllExpensesActivity";
 import RecentExpensesActivity from "./activities/RecentExpensesActivity";
+import IconButton from "./UI/IconButton";
+import { store } from "./redux/store";
+import { Provider } from "react-redux";
 
 import { GlobalStyles } from "./constants/styles";
 
@@ -17,12 +20,22 @@ const Tab = createBottomTabNavigator();
 const ExpenseOverView = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ navigation }) => ({
         headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
         headerTintColor: "#fff",
         tabBarStyle: { backgroundColor: GlobalStyles.colors.primary500 },
         tabBarActiveTintColor: GlobalStyles.colors.accent500,
-      }}
+        headerRight: ({ tintColor }) => (
+          <IconButton
+            icon="add-circle"
+            size={24}
+            color={tintColor}
+            onPress={() => {
+              navigation.navigate("ManageExpenses");
+            }}
+          />
+        ),
+      })}
     >
       <Tab.Screen
         name="RecentExpenses"
@@ -53,20 +66,29 @@ const ExpenseOverView = () => {
 export default function App() {
   return (
     <>
-      <StatusBar style="light" />
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="ExpenseOverView"
-            component={ExpenseOverView}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ManageExpenses"
-            component={ManageExpensesActivity}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <Provider store={store}>
+        <StatusBar style="light" />
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: GlobalStyles.colors.primary500,
+              },
+              headerTintColor: "#fff",
+            }}
+          >
+            <Stack.Screen
+              name="ExpenseOverView"
+              component={ExpenseOverView}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ManageExpenses"
+              component={ManageExpensesActivity}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </Provider>
     </>
   );
 }
