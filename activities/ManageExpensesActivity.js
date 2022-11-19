@@ -8,6 +8,7 @@ import IconButton from "../UI/IconButton";
 import Button from "../UI/Button";
 import { GlobalStyles } from "../constants/styles";
 import { updateExpenseList } from "../redux/reducers/expenseReducer";
+import { storeExpense } from "../helpers/httpHelper";
 
 const ManageExpensesActivity = ({ route, navigation }) => {
   const choosedExpenseId = route.params?.expenseId;
@@ -18,7 +19,7 @@ const ManageExpensesActivity = ({ route, navigation }) => {
   const [formData, setFormData] = useState({
     description: { data: "", isValid: true },
     amount: { data: "", isValid: true },
-    expenseDate: { data: "", isValid: true },
+    expenseDate: { data: new Date().toISOString(), isValid: true },
   });
   const [mode, setMode] = useState("date");
   const [show, setShow] = useState(false);
@@ -81,7 +82,7 @@ const ManageExpensesActivity = ({ route, navigation }) => {
     navigation.goBack();
   };
 
-  const addOrUpdateButtonHandler = () => {
+  const addOrUpdateButtonHandler = async () => {
     const isValidDescription = formData?.description?.data ? true : false;
     const isValidAmount = formData?.amount?.data ? true : false;
     if (!isValidDescription) {
@@ -127,22 +128,27 @@ const ManageExpensesActivity = ({ route, navigation }) => {
         dispatch(updateExpenseList(newExpenseList));
       }
     } else {
-      const id =
-        new Date() +
-        Math.random()
-          .toString(36)
-          .replace(/[^a-z]+/g, "")
-          .substring(0, 9);
       const expenseData = {
-        id: id,
         date: formData.expenseDate.data,
         description: formData.description.data,
         amount: parseInt(formData.amount.data),
       };
+      const storeExpenseResponse = await storeExpense(expenseData);
+      console.log("storeExpenseResponse", storeExpenseResponse);
+      if (!storeExpenseResponse) {
+        return;
+      }
+      expenseData.id = storeExpenseResponse.name;
       const newExpenseList = [...expenseList];
       newExpenseList.push(expenseData);
       dispatch(updateExpenseList(newExpenseList));
     }
+    setFormData({
+      description: { data: "", isValid: true },
+      amount: { data: "", isValid: true },
+      expenseDate: { data: new Date().toISOString(), isValid: true },
+    });
+
     navigation.navigate("ExpenseOverView");
   };
 

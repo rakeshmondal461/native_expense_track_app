@@ -78,8 +78,8 @@ const ExpensesOutput = ({ expenses, expensesPeriod }) => {
   const expenseList = useSelector((state) => state.expense.expenseList);
   return (
     <View style={styles.mainContainer}>
-      <ExpensesSummary expenses={expenseList} periodName={expensesPeriod} />
-      <ExpensesList expenses={expenseList} />
+      <ExpensesSummary expenses={expenses} periodName={expensesPeriod} />
+      <ExpensesList expenses={expenses} />
     </View>
   );
 };

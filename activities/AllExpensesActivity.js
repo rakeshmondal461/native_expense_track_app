@@ -1,11 +1,21 @@
 import { View, Text, StyleSheet } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ExpensesOutput from "../components/ExpensesOutput/ExpensesOutput";
 
 const AllExpensesActivity = () => {
+  const [expenses, setExpenses] = useState([]);
+  useEffect(() => {
+    async function getExpenses() {
+      const response = await fetchExpenses();
+      if (response) {
+        setExpenses(response);
+      }
+    }
+    getExpenses();
+  }, []);
   return (
     <View style={styles.allExpenseRoot}>
-      <ExpensesOutput expensesPeriod="All" />
+      <ExpensesOutput expenses={expenses} expensesPeriod="All" />
     </View>
   );
 };
