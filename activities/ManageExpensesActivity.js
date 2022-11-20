@@ -8,13 +8,23 @@ import IconButton from "../UI/IconButton";
 import Button from "../UI/Button";
 import { GlobalStyles } from "../constants/styles";
 import { updateExpenseList } from "../redux/reducers/expenseReducer";
-import { storeExpense } from "../helpers/httpHelper";
+import {
+  storeExpense,
+  updateExpense,
+  deleteExpense,
+} from "../helpers/httpHelper";
+
+import LoadingOverlay from "../UI/LoadingOverlay";
+import ErrorOverlay from "../UI/ErrorOverlay";
 
 const ManageExpensesActivity = ({ route, navigation }) => {
   const choosedExpenseId = route.params?.expenseId;
   const isEditing = !!choosedExpenseId;
   const expenseList = useSelector((state) => state.expense.expenseList);
   const dispatch = useDispatch();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
 
   const [formData, setFormData] = useState({
     description: { data: "", isValid: true },
@@ -68,12 +78,22 @@ const ManageExpensesActivity = ({ route, navigation }) => {
     setShow(true);
   };
 
-  const handleDeleteExpense = () => {
+  const handleDeleteExpense = async () => {
     const index = expenseList.findIndex((x) => x.id === choosedExpenseId);
     if (index > -1) {
       const newExpenseList = [...expenseList];
       newExpenseList.splice(index, 1);
       dispatch(updateExpenseList(newExpenseList));
+      setIsLoading(true);
+      try {
+        const deleteExpenseResponse = await deleteExpense(choosedExpenseId);
+        if (!deleteExpenseResponse) {
+          setError("Delete unsuccessfull!");
+        }
+      } catch (error) {
+        setError("Delete unsuccessfull!");
+      }
+      setIsLoading(false);
     }
     navigation.navigate("ExpenseOverView");
   };
@@ -125,7 +145,23 @@ const ManageExpensesActivity = ({ route, navigation }) => {
       if (index > -1) {
         const newExpenseList = [...expenseList];
         newExpenseList[index] = expenseData;
-        dispatch(updateExpenseList(newExpenseList));
+        setIsLoading(true);
+
+        try {
+          const updateExpenseResponse = await updateExpense(
+            choosedExpenseId,
+            expenseData
+          );
+          if (!updateExpenseResponse) {
+            setError("Data update failed");
+            setIsLoading(false);
+            return;
+          }
+          dispatch(updateExpenseList(newExpenseList));
+        } catch (error) {
+          setError("Data update failed");
+          setIsLoading(false);
+        }
       }
     } else {
       const expenseData = {
@@ -133,15 +169,24 @@ const ManageExpensesActivity = ({ route, navigation }) => {
         description: formData.description.data,
         amount: parseInt(formData.amount.data),
       };
-      const storeExpenseResponse = await storeExpense(expenseData);
-      console.log("storeExpenseResponse", storeExpenseResponse);
-      if (!storeExpenseResponse) {
-        return;
+      setIsLoading(true);
+      try {
+        const storeExpenseResponse = await storeExpense(expenseData);
+        //console.log("storeExpenseResponse", storeExpenseResponse);
+        if (!storeExpenseResponse) {
+          setError("Data not submitted");
+          setIsLoading(false);
+          return;
+        }
+        expenseData.id = storeExpenseResponse.name;
+        const newExpenseList = [...expenseList];
+        newExpenseList.push(expenseData);
+        dispatch(updateExpenseList(newExpenseList));
+        setIsLoading(false);
+      } catch (error) {
+        setError("Data not submitted");
+        setIsLoading(false);
       }
-      expenseData.id = storeExpenseResponse.name;
-      const newExpenseList = [...expenseList];
-      newExpenseList.push(expenseData);
-      dispatch(updateExpenseList(newExpenseList));
     }
     setFormData({
       description: { data: "", isValid: true },
@@ -151,6 +196,18 @@ const ManageExpensesActivity = ({ route, navigation }) => {
 
     navigation.navigate("ExpenseOverView");
   };
+
+  const closeErrorOverlay = () => {
+    setError(null);
+  };
+
+  if (error && !isLoading) {
+    return <ErrorOverlay message={error} onConfirm={closeErrorOverlay} />;
+  }
+
+  if (isLoading) {
+    return <LoadingOverlay />;
+  }
 
   return (
     <View style={styles.mainContainer}>

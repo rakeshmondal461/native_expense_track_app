@@ -1,6 +1,6 @@
 import axios from "axios";
 const FIREBSE_URL =
-  "https://react-native-expense-tra-24a08-default-rtdb.firebaseio.com";
+  "https://react-native-expense-tra-24a08-default-rtdb.firebaseio.com/";
 
 export const storeExpense = async (expenseData) => {
   try {
@@ -34,6 +34,33 @@ export const fetchExpenses = async () => {
       expenses.push(expenseObj);
     }
     return expenses;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateExpense = async (id, expenseData) => {
+  try {
+    const response = await axios.put(
+      FIREBSE_URL + `/expenses/${id}.json`,
+      expenseData
+    );
+    if (!response.data) {
+      return null;
+    }
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteExpense = async (id) => {
+  try {
+    const response = await axios.delete(FIREBSE_URL + `/expenses/${id}.json`);
+    if (!response.data) {
+      return null;
+    }
+    return response.data;
   } catch (error) {
     console.log(error);
   }

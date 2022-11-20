@@ -9,7 +9,7 @@ export const expenseReducer = createSlice({
   initialState,
   reducers: {
     updateExpenseList: (state, action) => {
-      state.expenseList = action.payload;
+      state.expenseList = action.payload.reverse();
     },
   },
 });
